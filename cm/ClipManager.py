@@ -4,14 +4,10 @@ import threading
 import time
 import traceback
 
-import pystray
 import win32api
 import win32clipboard
 import win32con
 import win32gui
-from PIL import Image
-
-import importlib.resources
 
 # Store the supported formats
 SUPPORTED_CF = [
@@ -173,50 +169,3 @@ class Clipboard:
     def stop(self):
         if self._thread_id > 0:
             win32api.PostThreadMessage(self._thread_id, win32con.WM_QUIT, 0, 0)
-
-
-class TrayIcon:
-    def __init__(self):
-        self._icon = None
-        self._clipboard = None
-
-    def run(self):
-        CM_IMAGE_FILE = importlib.resources.path('cm', 'cm.png')
-        image = Image.open(CM_IMAGE_FILE)
-
-        menu = pystray.Menu(
-            pystray.MenuItem('Debug mode', lambda: self._set_loglevel(logging.DEBUG)),
-            pystray.MenuItem('Info mode', lambda: self._set_loglevel(logging.INFO)),
-            pystray.MenuItem('Start CM', lambda: self._run_clipboard_manager(self._icon)),
-            pystray.MenuItem('Stop CM', lambda: self._clipboard.stop()),
-            pystray.MenuItem('Quit', lambda: self.stop()))
-
-        self._icon = pystray.Icon("CM", image, "Clipboard Manager", menu=menu)
-
-        self._clipboard = Clipboard(trigger_at_start=False)
-        self._icon.run(self._run_clipboard_manager)
-
-    def _run_clipboard_manager(self, icon):
-        self._icon.visible = True
-
-        def clipboard_runner():
-            self._clipboard.listen()
-
-        th = threading.Thread(target=clipboard_runner, daemon=True)
-        th.start()
-
-    def _stop_clipboard_manager(self):
-        self._clipboard.stop()
-
-    def _set_loglevel(self, level):
-        logging.getLogger().setLevel(level)
-
-    def stop(self):
-        self._icon.visible = False
-        self._clipboard.stop()
-        self._icon.stop()
-
-def main():
-    logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.DEBUG)
-    trayIcon = TrayIcon()
-    trayIcon.run()
