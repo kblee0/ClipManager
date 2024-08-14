@@ -1,7 +1,9 @@
 import logging
+
 import pystray
 from PIL import Image
 import importlib.resources
+import tempfile
 import threading
 
 from cm.ClipManager import Clipboard
@@ -18,6 +20,7 @@ class TrayIcon:
             pystray.MenuItem('Info mode', lambda: self._set_loglevel(logging.INFO)),
             pystray.MenuItem('Start CM', lambda: self._run_clipboard_manager(self._icon)),
             pystray.MenuItem('Stop CM', lambda: self._clipboard.stop()),
+            pystray.MenuItem('View logfile', lambda: self._view_logfile()),
             pystray.MenuItem('Quit', lambda: self.stop()))
 
         file = str(importlib.resources.files().joinpath('data/cm.png'))
@@ -42,6 +45,14 @@ class TrayIcon:
     @staticmethod
     def _set_loglevel(level):
         logging.getLogger().setLevel(level)
+
+    @staticmethod
+    def _view_logfile():
+        logFile = tempfile.gettempdir() + '\\cm.log'
+        tailprog = str(importlib.resources.files().joinpath('data/SnakeTail.exe'))
+        cmd = '"{}" "{}"'.format(tailprog, logFile)
+        import subprocess
+        subprocess.Popen([tailprog, logFile], shell=False)
 
     def stop(self):
         self._icon.visible = False
