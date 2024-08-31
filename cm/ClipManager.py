@@ -85,6 +85,7 @@ class Clipboard:
                 break
             except:
                 logging.error("OpenClipboard error. %s", traceback.format_exc())
+                if i == 5: return
 
         try:
             format = win32clipboard.EnumClipboardFormats(0)
