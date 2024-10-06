@@ -11,7 +11,7 @@ def main():
                                        interval=1,
                                        backupCount=5)
 
-    logging.basicConfig(handlers=[handler], format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(handlers=[handler], format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.INFO)
     trayIcon = TrayIcon()
     trayIcon.run()
 
