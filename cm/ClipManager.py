@@ -32,7 +32,7 @@ class Clipboard:
         self._trigger_at_start = trigger_at_start
         self._clip_data = {}
         self._last_clip_seq = 0
-        self._thread_id = 0
+        self._thread = None
         self._hwnd = self._create_window()
 
     def _create_window(self) -> int:
@@ -143,7 +143,7 @@ class Clipboard:
         logging.info("Clipboard has been restored. :: format count = %d", len(self._clip_data))
 
     def listen(self):
-        if self._thread_id > 0:
+        if self.is_listening():
             logging.info("Clipboard listener is already running.")
             return
 
@@ -153,20 +153,24 @@ class Clipboard:
         def runner():
             logging.info("Clipboard listener started.")
 
-            self._thread_id = win32api.GetCurrentThreadId()
             ctypes.windll.user32.AddClipboardFormatListener(self._hwnd)
             win32gui.PumpMessages()
             ctypes.windll.user32.RemoveClipboardFormatListener(self._hwnd)
             logging.info("Clipboard listener stopped.")
-            self._thread_id = 0
 
-        th = threading.Thread(target=runner, daemon=True)
+        self._thread = threading.Thread(target=runner, name="cm.listener", daemon=True)
 
-        th.start()
+        self._thread.start()
 
-        while th.is_alive():
-            th.join(1)
+        # while th.is_alive():
+        #     th.join(1)
 
     def stop(self):
-        if self._thread_id > 0:
-            win32api.PostThreadMessage(self._thread_id, win32con.WM_QUIT, 0, 0)
+        if self.is_listening():
+            win32api.PostThreadMessage(self._thread.ident, win32con.WM_QUIT, 0, 0)
+            while self._thread.is_alive():
+                self._thread.join(1)
+        self._thread = None
+
+    def is_listening(self):
+        return self._thread != None

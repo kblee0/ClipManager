@@ -2,7 +2,6 @@ import importlib.resources
 import logging
 import subprocess
 import tempfile
-import threading
 
 import pystray
 from PIL import Image
@@ -14,48 +13,46 @@ from cm.ClipManager import Clipboard
 class TrayIcon:
     def __init__(self):
         self._icon = None
-        self._clipboard = None
+        self._clipboard = Clipboard(trigger_at_start=False)
+        self._clipboard.listen()
         self._awake = Awake()
         self._icon_images = []
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/cm.png'))))
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/caffeine.png'))))
 
-    def run(self):
+    def _create_menu(self):
         menu = pystray.Menu(
-            pystray.MenuItem('Debug mode', lambda: self._set_loglevel(logging.DEBUG)),
-            pystray.MenuItem('Info mode', lambda: self._set_loglevel(logging.INFO)),
-            pystray.MenuItem('Start CM', lambda: self._run_clipboard_manager(self._icon)),
-            pystray.MenuItem('Stop CM', lambda: self._clipboard.stop()),
-            pystray.MenuItem('Start/Stop awake', lambda: self._change_awake_status()),
+            pystray.MenuItem('Stop CM listener' if self._clipboard.is_listening() else 'Start CM', lambda: self._menu_cm_listening()),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem('Stop awake' if self._awake.status else 'Start awake', lambda: self._menu_awake_status(), default=True),
+            pystray.MenuItem('Keep screen on', lambda: self._menu_keep_screen_on(), checked=lambda item: self._awake.keep_screen_on, radio=True),
+            pystray.Menu.SEPARATOR,
             pystray.MenuItem('View logfile', lambda: self._view_logfile()),
+            pystray.MenuItem('Set log level to ' + ('DEBUG' if logging.getLogger().level == logging.INFO else 'INFO'), lambda: self._menu_switch_loglevel()),
+            pystray.Menu.SEPARATOR,
             pystray.MenuItem('Quit', lambda: self.stop()))
+        return menu
 
-        self._icon = pystray.Icon("CM", self._icon_images[0], "Clipboard Manager", menu=menu)
-        self._clipboard = Clipboard(trigger_at_start=False)
-        self._icon.run(self._run_clipboard_manager)
+    def run(self):
+        self._icon = pystray.Icon("CM", self._icon_images[0], "Clipboard Manager", menu=self._create_menu())
+        self._icon.run()
 
-    def _change_awake_status(self):
+    def _menu_cm_listening(self):
+        self._clipboard.stop() if self._clipboard.is_listening() else self._clipboard.listen()
+        self._icon.menu = self._create_menu()
+
+    def _menu_awake_status(self):
         self._awake.change_status()
-        if self._awake.status:
-            self._icon.icon = self._icon_images[1]
-        else:
-            self._icon.icon = self._icon_images[0]
+        self._icon.icon = self._icon_images[1] if self._awake.status else self._icon_images[0]
+        self._icon.menu = self._create_menu()
 
-    def _run_clipboard_manager(self, icon):
-        self._icon.visible = True
-
-        def clipboard_runner():
-            self._clipboard.listen()
-
-        th = threading.Thread(target=clipboard_runner, daemon=True)
-        th.start()
-
-    def _stop_clipboard_manager(self):
-        self._clipboard.stop()
-
-    @staticmethod
-    def _set_loglevel(level):
+    def _menu_switch_loglevel(self):
+        level = logging.INFO if logging.getLogger().level == logging.DEBUG else logging.DEBUG
         logging.getLogger().setLevel(level)
+        self._icon.menu = self._create_menu()
+
+    def _menu_keep_screen_on(self):
+        self._awake.keep_screen_on = not self._awake.keep_screen_on
 
     @staticmethod
     def _view_logfile():
