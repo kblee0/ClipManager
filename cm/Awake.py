@@ -6,9 +6,9 @@ class Awake:
         self.status = False
         self.keep_screen_on = False
         logging.info("Awake process started.")
-        self._change_awake_status(self.status)
+        self.set_awake_status(self.status)
 
-    def _change_awake_status(self, status):
+    def set_awake_status(self, status):
         # ES_CONTINUOUS & ES_SYSTEM_REQUIRED : 0x80000001
         # ES_CONTINUOUS & ES_DISPLAY_REQUIRED : 0x80000002
         # ES_CONTINUOUS : 0x80000000 (return tu normal)
@@ -23,9 +23,9 @@ class Awake:
 
         self.status = status
 
-    def change_status(self):
-        self._change_awake_status(not self.status)
+    def toggle_status(self):
+        self.set_awake_status(not self.status)
 
     def __del__(self):
         logging.info("Awake process ended.")
-        self._change_awake_status(False)
+        self.set_awake_status(False)

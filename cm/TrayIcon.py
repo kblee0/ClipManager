@@ -28,7 +28,7 @@ class TrayIcon:
             pystray.MenuItem('Keep screen on', lambda: self._menu_keep_screen_on(), checked=lambda item: self._awake.keep_screen_on, radio=True),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem('View logfile', lambda: self._view_logfile()),
-            pystray.MenuItem('Set log level to ' + ('DEBUG' if logging.getLogger().level == logging.INFO else 'INFO'), lambda: self._menu_switch_loglevel()),
+            pystray.MenuItem('Set log level to ' + ('DEBUG' if logging.getLogger().level == logging.INFO else 'INFO'), lambda: self._menu_loglevel()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem('Quit', lambda: self.stop()))
         return menu
@@ -42,17 +42,18 @@ class TrayIcon:
         self._icon.menu = self._create_menu()
 
     def _menu_awake_status(self):
-        self._awake.change_status()
+        self._awake.toggle_status()
         self._icon.icon = self._icon_images[1] if self._awake.status else self._icon_images[0]
-        self._icon.menu = self._create_menu()
-
-    def _menu_switch_loglevel(self):
-        level = logging.INFO if logging.getLogger().level == logging.DEBUG else logging.DEBUG
-        logging.getLogger().setLevel(level)
         self._icon.menu = self._create_menu()
 
     def _menu_keep_screen_on(self):
         self._awake.keep_screen_on = not self._awake.keep_screen_on
+        if self._awake.status: self._awake.set_awake_status(True)
+
+    def _menu_loglevel(self):
+        level = logging.INFO if logging.getLogger().level == logging.DEBUG else logging.DEBUG
+        logging.getLogger().setLevel(level)
+        self._icon.menu = self._create_menu()
 
     @staticmethod
     def _view_logfile():
