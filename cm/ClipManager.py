@@ -48,7 +48,7 @@ class Clipboard:
         return win32gui.CreateWindow(class_atom, self.__class__.__name__, 0, 0, 0, 0, 0, 0, 0, wc.hInstance, None)
 
     @staticmethod
-    def _format_name(fmt):
+    def _format_name(fmt) -> str:
         if not hasattr(Clipboard._format_name, "formats"):
             Clipboard._format_name.formats = {val: name for name, val in vars(win32clipboard).items() if
                                               name.startswith('CF_')}

@@ -20,7 +20,7 @@ class TrayIcon:
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/cm.png'))))
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/caffeine.png'))))
 
-    def _create_menu(self):
+    def _create_menu(self) -> pystray.Menu:
         menu = pystray.Menu(
             pystray.MenuItem('Stop CM listener' if self._clipboard.is_listening() else 'Start CM', lambda: self._menu_cm_listening()),
             pystray.Menu.SEPARATOR,
