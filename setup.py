@@ -8,7 +8,8 @@ setup(
     install_requires=[
         'pillow',
         'pystray',
-        'pywin32'
+        'pywin32',
+        'tendo'
     ],
     entry_points={
         'console_scripts': ['cm=cm.__main__:main']

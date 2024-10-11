@@ -1,10 +1,13 @@
 import logging
 import tempfile
 from logging.handlers import TimedRotatingFileHandler
+from tendo import singleton
 
 from cm.TrayIcon import TrayIcon
 
+
 def main():
+    me = singleton.SingleInstance()
     log_file = tempfile.gettempdir() + '\\cm.log'
     handler = TimedRotatingFileHandler(log_file,
                                        when="d",

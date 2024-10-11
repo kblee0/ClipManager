@@ -1,7 +1,9 @@
 import importlib.resources
 import logging
 import subprocess
+import sys
 import tempfile
+import winreg
 
 import pystray
 from PIL import Image
@@ -22,6 +24,7 @@ class TrayIcon:
 
     def _create_menu(self) -> pystray.Menu:
         menu = pystray.Menu(
+            pystray.MenuItem('Autorun at login', lambda: self._menu_register_autorun(), checked=lambda item: self._autorun_setting(0), radio=True),
             pystray.MenuItem('Stop CM listener' if self._clipboard.is_listening() else 'Start CM', lambda: self._menu_cm_listening()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem('Stop awake' if self._awake.status else 'Start awake', lambda: self._menu_awake_status(), default=True),
@@ -54,6 +57,28 @@ class TrayIcon:
         level = logging.INFO if logging.getLogger().level == logging.DEBUG else logging.DEBUG
         logging.getLogger().setLevel(level)
         self._icon.menu = self._create_menu()
+
+    def _autorun_setting(self, mode):
+        name = "CM.1.0"
+        result = True
+        try:
+            keypath = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, winreg.KEY_ALL_ACCESS)
+            if mode == 0:
+                result = winreg.QueryValueEx(keypath, name) == (sys.executable, winreg.REG_SZ)
+            elif mode == 1:
+                winreg.SetValueEx(keypath, name, 0, winreg.REG_SZ, sys.executable)
+            else:
+                winreg.DeleteValue(keypath, name)
+            winreg.CloseKey(keypath)
+            return result
+        except FileNotFoundError:
+            return False
+
+    def _menu_register_autorun(self):
+        if self._autorun_setting(0):
+            self._autorun_setting(2)
+        else:
+            self._autorun_setting(1)
 
     @staticmethod
     def _view_logfile():
