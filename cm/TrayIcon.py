@@ -32,6 +32,7 @@ class TrayIcon:
             pystray.Menu.SEPARATOR,
             pystray.MenuItem('View logfile', lambda: self._view_logfile()),
             pystray.MenuItem('Set log level to ' + ('DEBUG' if logging.getLogger().level == logging.INFO else 'INFO'), lambda: self._menu_loglevel()),
+            pystray.MenuItem('Clear Clipboard', lambda: self._clipboard.clear_clipboard()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem('Quit', lambda: self.stop()))
         return menu

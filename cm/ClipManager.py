@@ -142,6 +142,12 @@ class Clipboard:
                 return
         logging.info("Clipboard has been restored. :: format count = %d", len(self._clip_data))
 
+    def clear_clipboard(self):
+        logging.debug("Clear clipboard.")
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.CloseClipboard()
+
     def listen(self):
         if self.is_listening():
             logging.info("Clipboard listener is already running.")
