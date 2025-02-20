@@ -34,6 +34,7 @@ class Clipboard:
         self._last_clip_seq = 0
         self._thread = None
         self._hwnd = self._create_window()
+        self._text_only = False
 
     def _create_window(self) -> int:
         """
@@ -96,6 +97,8 @@ class Clipboard:
             else:
                 self._restore_clipboard()
                 pass
+        except:
+            logging.error("_process_clip error. %s", traceback.format_exc())
         finally:
             win32clipboard.CloseClipboard()
             logging.debug("CloseClipboard")
@@ -109,10 +112,19 @@ class Clipboard:
         data = {}
         while format != 0:
             format_name = Clipboard._format_name(format)
-            if format in SUPPORTED_CF:
+            if (not self._text_only and format in SUPPORTED_CF) or (self._text_only and format in (win32clipboard.CF_TEXT, win32clipboard.CF_UNICODETEXT)):
                 try:
+                    # if format in (win32clipboard.CF_TEXT,
+                    #               win32clipboard.CF_OEMTEXT,
+                    #               win32clipboard.CF_LOCALE,
+                    #               win32clipboard.CF_UNICODETEXT):
                     data[format] = win32clipboard.GetClipboardData(format)
                     logging.debug("+ Backup  :: format = %s(%d), size = %d", format_name, format, len(data[format]))
+                    # else:
+                    #     hg = win32clipboard.GetClipboardDataHandle(format)
+                    #     data[format_name] = win32clipboard.GetGlobalMemory(hg)
+                    #     data_len = getattr(data[format_name], "__len__", lambda: -1)()
+                    #     logging.debug("+ Backup  :: format = %s(%d), size = %d", format_name, format, data_len)
                 except:
                     logging.error("GetClipboardData(%s(%d)) error. %s", format_name, format, traceback.format_exc())
             else:
@@ -123,6 +135,7 @@ class Clipboard:
         logging.info("Clipboard has been backed up. :: format count = %d", len(data))
 
     def _restore_clipboard(self):
+        logging.debug("_restore_clipboard start")
         if self._clip_data == {}:
             logging.debug("There is no clipboard data to restore. :: last_seq = %d", self._last_clip_seq)
             return
@@ -133,9 +146,10 @@ class Clipboard:
         for format in self._clip_data:
             format_name = Clipboard._format_name(format)
             try:
-                win32clipboard.SetClipboardData(format, self._clip_data[format])
-                logging.debug("* Restore :: format = %s(%d), size = %d", format_name, format,
-                              len(self._clip_data[format]))
+                if not self._text_only or format in (win32clipboard.CF_TEXT, win32clipboard.CF_UNICODETEXT):
+                    win32clipboard.SetClipboardData(format, self._clip_data[format])
+                    logging.debug("* Restore :: format = %s(%d), size = %d", format_name, format,
+                                  len(self._clip_data[format]))
             except:
                 logging.error("SetClipboardData() error. :: format = %s(%d), size = %d, %s", format_name, format,
                               len(self._clip_data[format]), traceback.format_exc())
@@ -180,3 +194,6 @@ class Clipboard:
 
     def is_listening(self):
         return self._thread != None
+
+    def toogle_text_only(self):
+        self._text_only = not self._text_only

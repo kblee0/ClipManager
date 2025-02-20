@@ -22,6 +22,7 @@ class TrayIcon:
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/cm.png'))))
         self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/caffeine.png'))))
 
+    @property
     def _create_menu(self) -> pystray.Menu:
         menu = pystray.Menu(
             pystray.MenuItem('Autorun at login', lambda: self._menu_register_autorun(), checked=lambda item: self._autorun_setting(0), radio=True),
@@ -30,6 +31,7 @@ class TrayIcon:
             pystray.MenuItem('Stop awake' if self._awake.status else 'Start awake', lambda: self._menu_awake_status(), default=True),
             pystray.MenuItem('Keep screen on', lambda: self._menu_keep_screen_on(), checked=lambda item: self._awake.keep_screen_on, radio=True),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem('Text Only', lambda: self._clipboard.toogle_text_only(), checked=lambda item: self._clipboard._text_only, radio=True),
             pystray.MenuItem('View logfile', lambda: self._view_logfile()),
             pystray.MenuItem('Set log level to ' + ('DEBUG' if logging.getLogger().level == logging.INFO else 'INFO'), lambda: self._menu_loglevel()),
             pystray.MenuItem('Clear Clipboard', lambda: self._clipboard.clear_clipboard()),
@@ -38,17 +40,17 @@ class TrayIcon:
         return menu
 
     def run(self):
-        self._icon = pystray.Icon("CM", self._icon_images[0], "Clipboard Manager", menu=self._create_menu())
+        self._icon = pystray.Icon("CM", self._icon_images[0], "Clipboard Manager", menu=self._create_menu)
         self._icon.run()
 
     def _menu_cm_listening(self):
         self._clipboard.stop() if self._clipboard.is_listening() else self._clipboard.listen()
-        self._icon.menu = self._create_menu()
+        self._icon.menu = self._create_menu
 
     def _menu_awake_status(self):
         self._awake.toggle_status()
         self._icon.icon = self._icon_images[1] if self._awake.status else self._icon_images[0]
-        self._icon.menu = self._create_menu()
+        self._icon.menu = self._create_menu
 
     def _menu_keep_screen_on(self):
         self._awake.keep_screen_on = not self._awake.keep_screen_on
@@ -57,7 +59,7 @@ class TrayIcon:
     def _menu_loglevel(self):
         level = logging.INFO if logging.getLogger().level == logging.DEBUG else logging.DEBUG
         logging.getLogger().setLevel(level)
-        self._icon.menu = self._create_menu()
+        self._icon.menu = self._create_menu
 
     def _autorun_setting(self, mode):
         name = "CM.1.0"

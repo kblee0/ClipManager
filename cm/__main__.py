@@ -15,6 +15,8 @@ def main():
                                        backupCount=5)
 
     logging.basicConfig(handlers=[handler], format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.INFO)
+    logging.info("----------------------------------------------")
+    logging.info("ClipboardManager starting")
     tray_icon = TrayIcon()
     tray_icon.run()
 
