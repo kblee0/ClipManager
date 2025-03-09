@@ -10,10 +10,10 @@ import win32con
 import win32gui
 
 # Store the supported formats
-SUPPORTED_CF = [
+SUPPORTED_CF = (
     win32clipboard.RegisterClipboardFormat("Rich Text Format"),
-    win32clipboard.CF_TEXT,  # 1: Text
-    win32clipboard.CF_OEMTEXT,
+    # win32clipboard.CF_TEXT,  # 1: Text
+    # win32clipboard.CF_OEMTEXT,
     win32clipboard.CF_LOCALE,
     # win32clipboard.CF_BITMAP,
     # win32clipboard.CF_DIB,
@@ -24,7 +24,7 @@ SUPPORTED_CF = [
     win32clipboard.RegisterClipboardFormat("image/svg+xml"),
     win32clipboard.RegisterClipboardFormat("PNG"),
     # win32clipboard.RegisterClipboardFormat("XML Spreadsheet"),
-]
+)
 
 
 class Clipboard:
@@ -104,23 +104,30 @@ class Clipboard:
             logging.debug("CloseClipboard")
             self._last_clip_seq = win32clipboard.GetClipboardSequenceNumber()
 
+    def _is_available_format(self, format):
+        if format not in SUPPORTED_CF: return False
+        if self._text_only and format not in (win32clipboard.CF_UNICODETEXT,
+                                          win32clipboard.CF_LOCALE): return False
+        return True
+
     def _backup_clipboard(self):
         logging.debug("Starts clipboard backup.")
 
-        format = win32clipboard.EnumClipboardFormats(0)
-
         data = {}
-        while format != 0:
-            format_name = Clipboard._format_name(format)
-            if (not self._text_only and format in SUPPORTED_CF) or (self._text_only and format in (win32clipboard.CF_TEXT, win32clipboard.CF_UNICODETEXT)):
-                try:
-                    data[format] = win32clipboard.GetClipboardData(format)
-                    logging.debug("+ Backup  :: format = %s(%d), size = %d", format_name, format, len(data[format]))
-                except:
-                    logging.error("GetClipboardData(%s(%d)) error. %s", format_name, format, traceback.format_exc())
-            else:
-                logging.debug("- Backup  :: format = %s(%d)", format_name, format)
+        format = 0
+        while True:
             format = win32clipboard.EnumClipboardFormats(format)
+            if format == 0: break
+            format_name = Clipboard._format_name(format)
+
+            if not self._is_available_format(format):
+                logging.debug("- Backup  :: format = %s(%d)", format_name, format)
+                continue
+            try:
+                data[format] = win32clipboard.GetClipboardData(format)
+                logging.debug("+ Backup  :: format = %s(%d), size = %d", format_name, format, len(data[format]))
+            except:
+                logging.error("GetClipboardData(%s(%d)) error. %s", format_name, format, traceback.format_exc())
 
         self._clip_data = data
         logging.info("Clipboard has been backed up. :: format count = %d", len(data))
@@ -137,21 +144,18 @@ class Clipboard:
         for format in self._clip_data:
             format_name = Clipboard._format_name(format)
             try:
-                if self._text_only and format not in (win32clipboard.CF_TEXT, win32clipboard.CF_UNICODETEXT): continue
+                if not self._is_available_format(format): continue
 
                 data = self._clip_data[format]
 
-                if format in (win32clipboard.CF_TEXT,
-                              win32clipboard.CF_OEMTEXT,
-                              win32clipboard.CF_LOCALE,
-                              win32clipboard.CF_UNICODETEXT):
-                    # Error avoidance logic for specific data
-                    # Example: 12345\r\n
+                # Error avoidance logic for specific data
+                # Example: 12345\r\n
+                if format == win32clipboard.CF_UNICODETEXT:
                     if isinstance(data, bytes): data = data.decode("utf-8")
-                    utf16data = data.replace("\r\n", "\n").replace("\r", "\n").encode("utf-16-le")
-                    win32clipboard.SetClipboardData(format, utf16data)
-                else:
-                    win32clipboard.SetClipboardData(format, data)
+                    if data.find("\r") >= 0 and format != win32clipboard.CF_UNICODETEXT: continue
+                    data = data.replace("\r\n", "\n").replace("\r", "\n").encode("utf-16-le")
+
+                win32clipboard.SetClipboardData(format, data)
                 logging.debug("* Restore :: format = %s(%d), size = %d", format_name, format,
                               len(self._clip_data[format]))
             except:
