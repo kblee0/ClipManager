@@ -12,13 +12,13 @@ import win32gui
 # Store the supported formats
 SUPPORTED_CF = (
     win32clipboard.RegisterClipboardFormat("Rich Text Format"),
-    # win32clipboard.CF_TEXT,  # 1: Text
+    win32clipboard.CF_TEXT,  # 1: Text
     # win32clipboard.CF_OEMTEXT,
     win32clipboard.CF_LOCALE,
     # win32clipboard.CF_BITMAP,
     # win32clipboard.CF_DIB,
     win32clipboard.CF_DIBV5,  # 17: Images
-    # win32clipboard.CF_ENHMETAFILE
+    # win32clipboard.CF_ENHMETAFILE,
     win32clipboard.CF_UNICODETEXT,  # 13: Unicode Text
     win32clipboard.RegisterClipboardFormat("HTML Format"),
     win32clipboard.RegisterClipboardFormat("image/svg+xml"),
@@ -77,14 +77,14 @@ class Clipboard:
         if self._last_clip_seq >= clip_seq:
             logging.debug("Ignore processed sequences. seq = %d", clip_seq)
             return
-        time.sleep(0.1)
+        time.sleep(0.05)
         for i in range(1, 5):
             try:
-                time.sleep(0.1 * i)
                 win32clipboard.OpenClipboard()
                 logging.debug("OpenClipboard() success.")
                 break
             except:
+                time.sleep(0.1 * i)
                 logging.error("OpenClipboard error. %s", traceback.format_exc())
                 if i == 5: return
 
@@ -150,12 +150,11 @@ class Clipboard:
 
                 # Error avoidance logic for specific data
                 # Example: 12345\r\n
-                if format == win32clipboard.CF_UNICODETEXT:
-                    if isinstance(data, bytes): data = data.decode("utf-8")
-                    if data.find("\r") >= 0 and format != win32clipboard.CF_UNICODETEXT: continue
-                    data = data.replace("\r\n", "\n").replace("\r", "\n").encode("utf-16-le")
-
-                win32clipboard.SetClipboardData(format, data)
+                if format in (win32clipboard.CF_UNICODETEXT,
+                        win32clipboard.CF_TEXT):
+                    win32clipboard.SetClipboardText(data, format)
+                else:
+                    win32clipboard.SetClipboardData(format, data)
                 logging.debug("* Restore :: format = %s(%d), size = %d", format_name, format,
                               len(self._clip_data[format]))
             except:
