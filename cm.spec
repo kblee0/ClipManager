@@ -1,9 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files
+import glob
 
-datas = []
-datas += collect_data_files('cm')
-
+datas = [(file, "data") for file in glob.glob("cm/data/*")]
 
 a = Analysis(
     ['cm\\__main__.py'],

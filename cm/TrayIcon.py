@@ -1,5 +1,6 @@
 import importlib.resources
 import logging
+import os
 import subprocess
 import sys
 import tempfile
@@ -12,6 +13,11 @@ from cm.Awake import Awake
 from cm.ClipManager import Clipboard
 
 
+def resource_path(relative_path: str) -> str:
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
+
 class TrayIcon:
     def __init__(self):
         self._icon = None
@@ -19,8 +25,8 @@ class TrayIcon:
         self._clipboard.listen()
         self._awake = Awake()
         self._icon_images = []
-        self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/cm.png'))))
-        self._icon_images.append(Image.open(str(importlib.resources.files().joinpath('data/caffeine.png'))))
+        self._icon_images.append(Image.open(resource_path('data/cm.png')))
+        self._icon_images.append(Image.open(resource_path('data/caffeine.png')))
 
     @property
     def _create_menu(self) -> pystray.Menu:
@@ -86,7 +92,7 @@ class TrayIcon:
     @staticmethod
     def _view_logfile():
         log_file = tempfile.gettempdir() + '\\cm.log'
-        tail_pgm = str(importlib.resources.files().joinpath('data/SnakeTail.exe'))
+        tail_pgm = resource_path('data/SnakeTail.exe')
 
         subprocess.Popen([tail_pgm, log_file], shell=False)
 
