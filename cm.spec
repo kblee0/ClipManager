@@ -1,13 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-import glob
 
-datas = [(file, "data") for file in glob.glob("cm/data/*")]
 
 a = Analysis(
-    ['cm\\__main__.py'],
+    ['src/cm/__main__.py'],
     pathex=[],
     binaries=[],
-    datas=datas,
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -31,11 +29,10 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['cm\\data\\cm.ico'],
 )

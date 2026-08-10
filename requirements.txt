@@ -1,5 +1,0 @@
-Pillow>=11.2.1
-pystray>=0.19.5
-pywin32>=311
-setuptools>=80.9.0
-tendo>=0.3.0

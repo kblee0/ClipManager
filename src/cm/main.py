@@ -1,6 +1,7 @@
 import logging
 import tempfile
 from logging.handlers import TimedRotatingFileHandler
+
 from tendo import singleton
 
 from cm.TrayIcon import TrayIcon
@@ -21,6 +22,3 @@ def main():
     logging.info("ClipboardManager starting")
     tray_icon = TrayIcon()
     tray_icon.run()
-
-if __name__ == '__main__':
-    main()

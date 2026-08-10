@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ClipManager.iml" filepath="$PROJECT_DIR$/.idea/ClipManager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/clipmanager.iml" filepath="$PROJECT_DIR$/.idea/clipmanager.iml" />
     </modules>
   </component>
 </project>
