@@ -22,3 +22,6 @@ def main():
     logging.info("ClipboardManager starting")
     tray_icon = TrayIcon()
     tray_icon.run()
+
+if __name__ == "__main__":
+    main()
