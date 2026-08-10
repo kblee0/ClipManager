@@ -9,8 +9,8 @@ import winreg
 import pystray
 from PIL import Image
 
-from cm.Awake import Awake
-from cm.ClipManager import Clipboard
+from cm.awake import Awake
+from cm.clipmanager import Clipboard
 
 
 def resource_path(relative_path: str) -> str:

@@ -4,7 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 from tendo import singleton
 
-from cm.TrayIcon import TrayIcon
+from cm.trayicon import TrayIcon
 
 
 def main():
