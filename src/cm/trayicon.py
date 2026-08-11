@@ -3,17 +3,18 @@ import subprocess
 import sys
 import tempfile
 import winreg
-from importlib.resources import files
+from importlib import resources
 
 import pystray
 from PIL import Image
 
+from cm import resources as res
 from cm.awake import Awake
 from cm.clipmanager import Clipboard
 
-TRAY_ICON_CM = files("cm") / "resources" / "cm.png"
-TRAY_ICON_CF = files("cm") / "resources" / "caffeine.png"
-TAIL_PGM = files("cm") / "resources" / "SnakeTail.exe"
+TRAY_ICON_CM = resources.files(res) / "cm.png"
+TRAY_ICON_CF = resources.files(res) / "caffeine.png"
+TAIL_PGM = resources.files(res) / "SnakeTail.exe"
 
 class TrayIcon:
     def __init__(self):
